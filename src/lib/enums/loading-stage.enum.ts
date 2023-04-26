@@ -1,6 +1,6 @@
 enum LoadingStage {
-  PreLoad = "PreLoad",
-  Load = "Load",
-  AfterLoad = "AfterLoad"
+	PreLoad = 'PreLoad',
+	Load = 'Load',
+	AfterLoad = 'AfterLoad',
 }
 export default LoadingStage;

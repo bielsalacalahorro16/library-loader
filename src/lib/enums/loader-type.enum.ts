@@ -1,5 +1,5 @@
 enum LoaderType {
-  Sequencial = "Sequencial",
-  Stage = "Stage",
+	Sequencial = 'Sequencial',
+	Stage = 'Stage',
 }
 export default LoaderType;

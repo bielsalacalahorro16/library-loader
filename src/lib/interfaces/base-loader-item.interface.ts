@@ -1,3 +1,3 @@
 export interface BaseLoaderItem {
-  urls: string[];
+	urls: string[];
 }
