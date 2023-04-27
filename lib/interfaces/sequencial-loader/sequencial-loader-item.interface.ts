@@ -1,7 +1,7 @@
-import Priority from '@enums/priority.enum';
-import ScriptLoaderType from '@enums/script-loader-type.enum';
-import StyleLoaderType from '@enums/style-loader-type.enum';
-import { BaseLoaderItem } from '@interfaces/base-loader-item.interface';
+import Priority from '../../enums/priority.enum';
+import ScriptLoaderType from '../../enums/script-loader-type.enum';
+import StyleLoaderType from '../../enums/style-loader-type.enum';
+import { BaseLoaderItem } from '../base-loader-item.interface';
 
 export interface BaseSequencialLoaderItem extends BaseLoaderItem {
 	priority: Priority;

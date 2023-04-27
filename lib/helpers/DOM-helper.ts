@@ -1,3 +1,5 @@
+import ScriptLoaderType from '../enums/script-loader-type.enum';
+
 export default class DOMHelper {
 	private static isLoadedInDOM(url: string, isScript: boolean): boolean {
 		const selector: string = isScript
@@ -8,7 +10,7 @@ export default class DOMHelper {
 
 	public static loadScript(
 		url: string,
-		headerContent = false
+		scriptLoaderType: ScriptLoaderType
 	): Promise<HTMLScriptElement> {
 		return new Promise((resolve, reject) => {
 			if (!this.isLoadedInDOM(url, true)) {
@@ -16,7 +18,7 @@ export default class DOMHelper {
 				script.setAttribute('src', url);
 				script.onload = () => resolve(script);
 				script.onerror = () => reject();
-				headerContent === false
+				scriptLoaderType === ScriptLoaderType.BodyContent
 					? document.body.appendChild(script)
 					: document.head.appendChild(script);
 			}
@@ -46,13 +48,5 @@ export default class DOMHelper {
 				head.appendChild(link);
 			}
 		});
-	}
-
-	public static buildResourceUrl(
-		baseUrl: string,
-		folder: string,
-		scriptName: string
-	): string {
-		return `${baseUrl}/${folder}/${scriptName}`;
 	}
 }
