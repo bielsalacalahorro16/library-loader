@@ -51,7 +51,7 @@ export class StageLoader {
 		}
 	}
 
-	private getResourcesByloadingStage(): ResouresByLoadingStage {}
+	//private getResourcesByloadingStage(): ResouresByLoadingStage {}
 
 	private checkScriptsLoadingStage(stage: LoadingStage) {
 		return this._scripts.some(
@@ -68,11 +68,15 @@ export class StageLoader {
 		styles: StyleStageLoaderItem[]
 	): Promise<void> {
 		try {
-			const promises: Promise<HTMLStyleElement>[] = styles.flatMap(
+			const promises: Promise<void>[] = styles.flatMap(
 				({ styleLoaderType, urls }) => {
-					return styleLoaderType === StyleLoaderType.InlineStyle
-						? urls.map((url: string) => DOMHelper.loadInlineStyle(url))
-						: urls.map((url: string) => DOMHelper.loadHeaderStyle(url));
+					return urls
+						.filter((url: string) => !DOMHelper.isLoadedInDOM(url, false))
+						.map((url: string) =>
+							styleLoaderType === StyleLoaderType.InlineStyle
+								? DOMHelper.loadInlineStyle(url)
+								: DOMHelper.loadHeaderStyle(url)
+						);
 				}
 			);
 			await Promise.all(promises);
@@ -84,8 +88,11 @@ export class StageLoader {
 	private async scriptStageLoader(
 		scripts: ScriptStageLoaderItem[]
 	): Promise<void> {
-		const promises = scripts.flatMap(({ scriptLoaderType, urls }) =>
-			urls.map((url) => DOMHelper.loadScript(url, scriptLoaderType))
+		const promises: Promise<void>[] = scripts.flatMap(
+			({ scriptLoaderType, urls }) =>
+				urls
+					.filter((url: string) => !DOMHelper.isLoadedInDOM(url, true))
+					.map((url) => DOMHelper.loadScript(url, scriptLoaderType))
 		);
 		await Promise.all(promises);
 	}

@@ -1,7 +1,7 @@
 import ScriptLoaderType from '../enums/script-loader-type.enum';
 
 export default class DOMHelper {
-	private static isLoadedInDOM(url: string, isScript: boolean): boolean {
+	public static isLoadedInDOM(url: string, isScript: boolean): boolean {
 		const selector: string = isScript
 			? `script[src*='${url}']`
 			: `link[href*='${url}']`;
@@ -11,42 +11,38 @@ export default class DOMHelper {
 	public static loadScript(
 		url: string,
 		scriptLoaderType: ScriptLoaderType
-	): Promise<HTMLScriptElement> {
+	): Promise<void> {
+		const script: HTMLScriptElement = document.createElement('script');
+		scriptLoaderType === ScriptLoaderType.BodyContent
+			? document.body.appendChild(script)
+			: document.head.appendChild(script);
+		script.setAttribute('src', url);
 		return new Promise((resolve, reject) => {
-			if (!this.isLoadedInDOM(url, true)) {
-				const script: HTMLScriptElement = document.createElement('script');
-				script.setAttribute('src', url);
-				script.onload = () => resolve(script);
-				script.onerror = () => reject();
-				scriptLoaderType === ScriptLoaderType.BodyContent
-					? document.body.appendChild(script)
-					: document.head.appendChild(script);
-			}
+			script.onload = (): void => resolve();
+			script.onerror = (): void => reject();
 		});
 	}
 
-	public static loadInlineStyle(styleText: string): Promise<HTMLStyleElement> {
+	public static loadInlineStyle(styleText: string): Promise<void> {
+		const style: HTMLStyleElement = document.createElement('style');
+		document.head.append(style);
+		style.textContent = styleText;
 		return new Promise((resolve, reject) => {
-			const style: HTMLStyleElement = document.createElement('style');
-			style.textContent = styleText;
-			document.head.append(style);
-			style.onload = () => resolve(style);
-			style.onerror = () => reject();
+			style.onload = (): void => resolve();
+			style.onerror = (): void => reject();
 		});
 	}
 
-	public static loadHeaderStyle(url: string): Promise<HTMLLinkElement> {
+	public static loadHeaderStyle(url: string): Promise<void> {
+		const head: HTMLHeadElement = document.head;
+		const link: HTMLLinkElement = document.createElement('link');
+		head.appendChild(link);
+		link.type = 'text/css';
+		link.rel = 'stylesheet';
+		link.href = url;
 		return new Promise((resolve, reject) => {
-			if (!this.isLoadedInDOM(url, false)) {
-				const head: HTMLHeadElement = document.head;
-				const link: HTMLLinkElement = document.createElement('link');
-				link.type = 'text/css';
-				link.rel = 'stylesheet';
-				link.href = url;
-				link.onload = () => resolve(link);
-				link.onerror = () => reject();
-				head.appendChild(link);
-			}
+			link.onload = (): void => resolve();
+			link.onerror = (): void => reject();
 		});
 	}
 }
