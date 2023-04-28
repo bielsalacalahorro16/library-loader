@@ -3,13 +3,13 @@ import StyleLoaderType from '../enums/style-loader-type.enum';
 import DOMHelper from '../helpers/DOM-helper';
 import { LoaderConfiguration } from '../interfaces/loader-configuration.interface';
 import {
+	ResourceType,
 	ScriptStageLoaderItem,
 	StyleStageLoaderItem,
 } from '../interfaces/stage-loader/stage-loader-item.interface';
 
 interface ResouresByLoadingStage {
-	preLoad: (ScriptStageLoaderItem | StyleStageLoaderItem)[];
-	load: (ScriptStageLoaderItem | StyleStageLoaderItem)[];
+	resources: (ScriptStageLoaderItem | StyleStageLoaderItem)[];
 }
 
 export class StageLoader {
@@ -27,41 +27,34 @@ export class StageLoader {
 		this._configuration = configuration;
 	}
 
-	private execute() {
-		//Stage: preload
-		if (
-			this.checkScriptsLoadingStage(LoadingStage.PreLoad) ||
-			this.checkStylesLoadingStage(LoadingStage.PreLoad)
-		) {
-			//Find all the matches for scripts and styles and load them
-		}
-		//Stage: load
-		if (
-			this.checkScriptsLoadingStage(LoadingStage.Load) ||
-			this.checkStylesLoadingStage(LoadingStage.Load)
-		) {
-			//Find all the matches for scripts and styles and load them
-		}
-		//Stage: afterLoad
-		if (
-			this.checkScriptsLoadingStage(LoadingStage.AfterLoad) ||
-			this.checkStylesLoadingStage(LoadingStage.AfterLoad)
-		) {
-			//Find all the matches for scripts and styles and load them
+	public async execute(): Promise<void> {
+		for (const loadingStage in LoadingStage) {
+			const { resources } = this.getResourcesByloadingStage(loadingStage);
+			if (resources.length > 0) {
+				const scripts: ScriptStageLoaderItem[] = resources.filter(
+					(x) => x.resourcesType === ResourceType.Script
+				) as ScriptStageLoaderItem[];
+				const styles: StyleStageLoaderItem[] = resources.filter(
+					(x) => x.resourcesType === ResourceType.Style
+				) as StyleStageLoaderItem[];
+
+				await Promise.all([
+					this.scriptStageLoader(scripts),
+					this.styleStageLoader(styles),
+				]);
+			}
 		}
 	}
 
-	//private getResourcesByloadingStage(): ResouresByLoadingStage {}
-
-	private checkScriptsLoadingStage(stage: LoadingStage) {
-		return this._scripts.some(
-			(script: ScriptStageLoaderItem) => script.loadingStage === stage
-		);
-	}
-	private checkStylesLoadingStage(stage: LoadingStage) {
-		return this._styles.some(
-			(script: StyleStageLoaderItem) => script.loadingStage === stage
-		);
+	private getResourcesByloadingStage(
+		loadingStage: string
+	): ResouresByLoadingStage {
+		return {
+			resources: [
+				...this._scripts.filter((x) => x.loadingStage === loadingStage),
+				...this._styles.filter((x) => x.loadingStage === loadingStage),
+			],
+		};
 	}
 
 	private async styleStageLoader(

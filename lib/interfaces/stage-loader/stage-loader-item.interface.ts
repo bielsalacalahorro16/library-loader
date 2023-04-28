@@ -3,8 +3,13 @@ import ScriptLoaderType from '../../enums/script-loader-type.enum';
 import StyleLoaderType from '../../enums/style-loader-type.enum';
 import { BaseLoaderItem } from '../base-loader-item.interface';
 
+export enum ResourceType {
+	Script = 'Script',
+	Style = 'Style',
+}
 export interface BaseStageLoaderItem extends BaseLoaderItem {
 	loadingStage?: LoadingStage;
+	resourcesType: ResourceType;
 }
 
 export interface ScriptStageLoaderItem extends BaseStageLoaderItem {
