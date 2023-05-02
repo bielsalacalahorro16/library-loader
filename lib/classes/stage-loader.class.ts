@@ -7,9 +7,15 @@ import {
 	ScriptStageLoaderItem,
 	StyleStageLoaderItem,
 } from '../interfaces/stage-loader/stage-loader-item.interface';
+import { ResourceValidator } from '../validators/resource-validator';
 
+// TODO:  better names for this two interfaces, maybe they can be merge into one
 interface ResouresByLoadingStage {
 	resources: (ScriptStageLoaderItem | StyleStageLoaderItem)[];
+}
+interface Resources {
+	scripts: ScriptStageLoaderItem[];
+	styles: StyleStageLoaderItem[];
 }
 
 export class StageLoader {
@@ -28,22 +34,39 @@ export class StageLoader {
 	}
 
 	public async execute(): Promise<void> {
-		for (const loadingStage in LoadingStage) {
-			const { resources } = this.getResourcesByloadingStage(loadingStage);
-			if (resources.length > 0) {
-				const scripts: ScriptStageLoaderItem[] = resources.filter(
-					(x) => x.resourcesType === ResourceType.Script
-				) as ScriptStageLoaderItem[];
-				const styles: StyleStageLoaderItem[] = resources.filter(
-					(x) => x.resourcesType === ResourceType.Style
-				) as StyleStageLoaderItem[];
-
-				await Promise.all([
-					this.scriptStageLoader(scripts),
-					this.styleStageLoader(styles),
-				]);
+		try {
+			for (const loadingStage in LoadingStage) {
+				const { resources } = this.getResourcesByloadingStage(loadingStage);
+				if (resources.length > 0) {
+					const { scripts, styles } = this.getFilteredResources(resources);
+					await Promise.all([
+						this.scriptStageLoader(scripts),
+						this.styleStageLoader(styles),
+					]);
+				}
 			}
+			if (
+				typeof this._configuration.callback !== 'undefined' &&
+				this._configuration.callback !== null
+			) {
+				await this._configuration.callback();
+			}
+		} catch (error) {
+			console.error(error);
 		}
+	}
+
+	private getFilteredResources(
+		resources: (ScriptStageLoaderItem | StyleStageLoaderItem)[]
+	): Resources {
+		return {
+			scripts: resources.filter(
+				(x) => x.resourcesType === ResourceType.Script
+			) as ScriptStageLoaderItem[],
+			styles: resources.filter(
+				(x) => x.resourcesType === ResourceType.Style
+			) as StyleStageLoaderItem[],
+		};
 	}
 
 	private getResourcesByloadingStage(
@@ -60,22 +83,19 @@ export class StageLoader {
 	private async styleStageLoader(
 		styles: StyleStageLoaderItem[]
 	): Promise<void> {
-		try {
-			const promises: Promise<void>[] = styles.flatMap(
-				({ styleLoaderType, urls }) => {
-					return urls
-						.filter((url: string) => !DOMHelper.isLoadedInDOM(url, false))
-						.map((url: string) =>
-							styleLoaderType === StyleLoaderType.InlineStyle
-								? DOMHelper.loadInlineStyle(url)
-								: DOMHelper.loadHeaderStyle(url)
-						);
-				}
-			);
-			await Promise.all(promises);
-		} catch (e) {
-			console.log(e);
-		}
+		const promises: Promise<void>[] = styles.flatMap(
+			({ styleLoaderType, urls }) => {
+				return urls
+					.filter((url: string) => !DOMHelper.isLoadedInDOM(url, false))
+					.map((url: string) => {
+						ResourceValidator.validate(url);
+						return styleLoaderType === StyleLoaderType.InlineStyle
+							? DOMHelper.loadInlineStyle(url)
+							: DOMHelper.loadHeaderStyle(url);
+					});
+			}
+		);
+		await Promise.all(promises);
 	}
 
 	private async scriptStageLoader(
@@ -85,7 +105,10 @@ export class StageLoader {
 			({ scriptLoaderType, urls }) =>
 				urls
 					.filter((url: string) => !DOMHelper.isLoadedInDOM(url, true))
-					.map((url) => DOMHelper.loadScript(url, scriptLoaderType))
+					.map((url) => {
+						ResourceValidator.validate(url);
+						return DOMHelper.loadScript(url, scriptLoaderType);
+					})
 		);
 		await Promise.all(promises);
 	}
