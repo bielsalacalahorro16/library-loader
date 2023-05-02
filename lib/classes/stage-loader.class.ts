@@ -8,6 +8,7 @@ import {
 	StyleStageLoaderItem,
 } from '../interfaces/stage-loader/stage-loader-item.interface';
 import { ResourceValidator } from '../validators/resource-validator';
+import Loader from './loader-abstract.class';
 
 // TODO:  better names for this two interfaces, maybe they can be merge into one
 interface ResouresByLoadingStage {
@@ -18,19 +19,18 @@ interface Resources {
 	styles: StyleStageLoaderItem[];
 }
 
-export class StageLoader {
+export class StageLoader extends Loader {
 	private readonly _scripts: ScriptStageLoaderItem[];
 	private readonly _styles: StyleStageLoaderItem[];
-	private readonly _configuration: LoaderConfiguration;
 
 	constructor(
 		scripts: ScriptStageLoaderItem[],
 		styles: StyleStageLoaderItem[],
 		configuration: LoaderConfiguration
 	) {
+		super(configuration);
 		this._scripts = scripts;
 		this._styles = styles;
-		this._configuration = configuration;
 	}
 
 	public async execute(): Promise<void> {
