@@ -19,3 +19,8 @@ export interface ScriptStageLoaderItem extends BaseStageLoaderItem {
 export interface StyleStageLoaderItem extends BaseStageLoaderItem {
 	styleLoaderType: StyleLoaderType;
 }
+
+export interface StageResources {
+	scripts: ScriptStageLoaderItem[];
+	styles: StyleStageLoaderItem[];
+}

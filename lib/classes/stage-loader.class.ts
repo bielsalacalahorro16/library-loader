@@ -5,19 +5,11 @@ import { LoaderConfiguration } from '../interfaces/loader-configuration.interfac
 import {
 	ResourceType,
 	ScriptStageLoaderItem,
+	StageResources,
 	StyleStageLoaderItem,
 } from '../interfaces/stage-loader/stage-loader-item.interface';
 import { ResourceValidator } from '../validators/resource-validator';
 import Loader from './loader-abstract.class';
-
-// TODO:  better names for this two interfaces, maybe they can be merge into one
-interface ResouresByLoadingStage {
-	resources: (ScriptStageLoaderItem | StyleStageLoaderItem)[];
-}
-interface Resources {
-	scripts: ScriptStageLoaderItem[];
-	styles: StyleStageLoaderItem[];
-}
 
 export class StageLoader extends Loader {
 	private readonly _scripts: ScriptStageLoaderItem[];
@@ -36,9 +28,9 @@ export class StageLoader extends Loader {
 	public async execute(): Promise<void> {
 		try {
 			for (const loadingStage in LoadingStage) {
-				const { resources } = this.getResourcesByloadingStage(loadingStage);
-				if (resources.length > 0) {
-					const { scripts, styles } = this.getFilteredResources(resources);
+				const { styles, scripts } =
+					this.getResourcesByLoadingStage(loadingStage);
+				if (styles.length > 0 || scripts.length > 0) {
 					await Promise.all([
 						this.scriptStageLoader(scripts),
 						this.styleStageLoader(styles),
@@ -46,8 +38,8 @@ export class StageLoader extends Loader {
 				}
 			}
 			if (
-				typeof this._configuration.callback !== 'undefined' &&
-				this._configuration.callback !== null
+				this._configuration.callback &&
+				typeof this._configuration.callback === 'function'
 			) {
 				await this._configuration.callback();
 			}
@@ -56,27 +48,18 @@ export class StageLoader extends Loader {
 		}
 	}
 
-	private getFilteredResources(
-		resources: (ScriptStageLoaderItem | StyleStageLoaderItem)[]
-	): Resources {
+	private getResourcesByLoadingStage(loadingStage: string): StageResources {
 		return {
-			scripts: resources.filter(
-				(x) => x.resourcesType === ResourceType.Script
+			scripts: this._scripts.filter(
+				(x) =>
+					x.loadingStage === loadingStage &&
+					x.resourcesType === ResourceType.Script
 			) as ScriptStageLoaderItem[],
-			styles: resources.filter(
-				(x) => x.resourcesType === ResourceType.Style
+			styles: this._styles.filter(
+				(x) =>
+					x.loadingStage === loadingStage &&
+					x.resourcesType === ResourceType.Script
 			) as StyleStageLoaderItem[],
-		};
-	}
-
-	private getResourcesByloadingStage(
-		loadingStage: string
-	): ResouresByLoadingStage {
-		return {
-			resources: [
-				...this._scripts.filter((x) => x.loadingStage === loadingStage),
-				...this._styles.filter((x) => x.loadingStage === loadingStage),
-			],
 		};
 	}
 
