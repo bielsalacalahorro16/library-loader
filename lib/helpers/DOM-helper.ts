@@ -1,4 +1,4 @@
-import ScriptLoaderType from '../enums/script-loader-type.enum';
+import ScriptLoaderType from '@enums/script-loader-type.enum';
 
 export default class DOMHelper {
 	public static isLoadedInDOM(url: string, isScript: boolean): boolean {

@@ -1,4 +1,4 @@
-import LoadingStage from '../enums/loading-stage.enum';
+import LoadingStage from '@enums/loading-stage.enum';
 import StyleLoaderType from '../enums/style-loader-type.enum';
 import DOMHelper from '../helpers/DOM-helper';
 import { LoaderConfiguration } from '../interfaces/loader-configuration.interface';
@@ -26,6 +26,7 @@ export class StageLoader extends Loader {
 	}
 
 	public async execute(): Promise<void> {
+		ResourceValidator.validateResources(this._scripts, this._styles);
 		try {
 			for (const loadingStage in LoadingStage) {
 				const { styles, scripts } =

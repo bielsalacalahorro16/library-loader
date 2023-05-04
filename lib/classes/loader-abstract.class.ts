@@ -1,4 +1,4 @@
-import { LoaderConfiguration } from '../interfaces/loader-configuration.interface';
+import { LoaderConfiguration } from '@interfaces/loader-configuration.interface';
 
 abstract class Loader {
 	protected readonly _configuration: LoaderConfiguration;
