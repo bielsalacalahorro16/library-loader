@@ -11,6 +11,10 @@ import {
 import { ResourceValidator } from '../validators/resource-validator';
 import Loader from './loader-abstract.class';
 
+declare global {
+	var debugOutput: boolean;
+}
+
 export class StageLoader extends Loader {
 	private readonly _scripts: ScriptStageLoaderItem[];
 	private readonly _styles: StyleStageLoaderItem[];
@@ -23,6 +27,7 @@ export class StageLoader extends Loader {
 		super(configuration);
 		this._scripts = scripts;
 		this._styles = styles;
+		debugOutput = this._configuration.Debug ?? false;
 	}
 
 	public async execute(): Promise<void> {
