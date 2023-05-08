@@ -7,7 +7,7 @@ abstract class Loader {
 		this._configuration = configuration;
 	}
 
-	public abstract execute(): Promise<void>;
+	public abstract loadResources(): Promise<void>;
 }
 
 export default Loader;

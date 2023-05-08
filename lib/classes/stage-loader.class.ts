@@ -10,10 +10,7 @@ import {
 } from '../interfaces/stage-loader/stage-loader-item.interface';
 import { ResourceValidator } from '../validators/resource-validator';
 import Loader from './loader-abstract.class';
-
-declare global {
-	var debugOutput: boolean;
-}
+import { removeDuplicatesInArray } from '@utils/utils';
 
 export class StageLoader extends Loader {
 	private readonly _scripts: ScriptStageLoaderItem[];
@@ -27,10 +24,9 @@ export class StageLoader extends Loader {
 		super(configuration);
 		this._scripts = scripts;
 		this._styles = styles;
-		debugOutput = this._configuration.Debug ?? false;
 	}
 
-	public async execute(): Promise<void> {
+	public async loadResources(): Promise<void> {
 		ResourceValidator.validateResources(this._scripts, this._styles);
 		try {
 			for (const loadingStage in LoadingStage) {
@@ -74,7 +70,8 @@ export class StageLoader extends Loader {
 	): Promise<void> {
 		const promises: Promise<void>[] = styles.flatMap(
 			({ styleLoaderType, urls }) => {
-				return urls
+				const nonDuplicatedUrls: string[] = removeDuplicatesInArray(urls);
+				return nonDuplicatedUrls
 					.filter((url: string) => !DOMHelper.isLoadedInDOM(url, false))
 					.map((url: string) => {
 						ResourceValidator.validate(url);
@@ -91,13 +88,15 @@ export class StageLoader extends Loader {
 		scripts: ScriptStageLoaderItem[]
 	): Promise<void> {
 		const promises: Promise<void>[] = scripts.flatMap(
-			({ scriptLoaderType, urls }) =>
-				urls
+			({ scriptLoaderType, urls }) => {
+				const nonDuplicatedUrls: string[] = removeDuplicatesInArray(urls);
+				return nonDuplicatedUrls
 					.filter((url: string) => !DOMHelper.isLoadedInDOM(url, true))
 					.map((url) => {
 						ResourceValidator.validate(url);
 						return DOMHelper.loadScript(url, scriptLoaderType);
-					})
+					});
+			}
 		);
 		await Promise.all(promises);
 	}
