@@ -12,6 +12,7 @@ import { ResourceValidator } from '../validators/resource-validator';
 import Loader from './loader-abstract.class';
 import { removeDuplicatesInArray } from '@utils/utils';
 
+//TODO: Add code documentation
 export class StageLoader extends Loader {
 	private readonly _scripts: ScriptStageLoaderItem[];
 	private readonly _styles: StyleStageLoaderItem[];
@@ -28,25 +29,33 @@ export class StageLoader extends Loader {
 
 	public async loadResources(): Promise<void> {
 		ResourceValidator.validateResources(this._scripts, this._styles);
-		try {
-			for (const loadingStage in LoadingStage) {
-				const { styles, scripts } =
-					this.getResourcesByLoadingStage(loadingStage);
-				if (styles.length > 0 || scripts.length > 0) {
-					await Promise.all([
-						this.scriptStageLoader(scripts),
-						this.styleStageLoader(styles),
-					]);
-				}
+		for (const loadingStage in LoadingStage) {
+			try {
+				await Promise.all([this.loadAllResources(loadingStage)]);
+			} catch (error) {
+				console.error(error);
 			}
-			if (
-				this._configuration.callback &&
-				typeof this._configuration.callback === 'function'
-			) {
-				await this._configuration.callback();
+		}
+		if (
+			this._configuration.callback &&
+			typeof this._configuration.callback === 'function'
+		) {
+			//TODO: Check if needs to be moved to dedicated function
+			try {
+				await Promise.all([this._configuration.callback()]);
+			} catch (error) {
+				console.error(error);
 			}
-		} catch (error) {
-			console.error(error);
+		}
+	}
+
+	private async loadAllResources(loadingStage: string): Promise<void> {
+		const { styles, scripts } = this.getResourcesByLoadingStage(loadingStage);
+		if (styles.length > 0 || scripts.length > 0) {
+			await Promise.all([
+				this.scriptsStageLoader(scripts),
+				this.stylesStageLoader(styles),
+			]);
 		}
 	}
 
@@ -65,7 +74,7 @@ export class StageLoader extends Loader {
 		};
 	}
 
-	private async styleStageLoader(
+	private async stylesStageLoader(
 		styles: StyleStageLoaderItem[]
 	): Promise<void> {
 		const promises: Promise<void>[] = styles.flatMap(
@@ -76,15 +85,15 @@ export class StageLoader extends Loader {
 					.map((url: string) => {
 						ResourceValidator.validate(url);
 						return styleLoaderType === StyleLoaderType.InlineStyle
-							? DOMHelper.loadInlineStyle(url)
-							: DOMHelper.loadHeaderStyle(url);
+							? DOMHelper.mapInlineStyle(url)
+							: DOMHelper.mapHeaderStyle(url);
 					});
 			}
 		);
 		await Promise.all(promises);
 	}
 
-	private async scriptStageLoader(
+	private async scriptsStageLoader(
 		scripts: ScriptStageLoaderItem[]
 	): Promise<void> {
 		const promises: Promise<void>[] = scripts.flatMap(
@@ -94,7 +103,7 @@ export class StageLoader extends Loader {
 					.filter((url: string) => !DOMHelper.isLoadedInDOM(url, true))
 					.map((url) => {
 						ResourceValidator.validate(url);
-						return DOMHelper.loadScript(url, scriptLoaderType);
+						return DOMHelper.mapScript(url, scriptLoaderType);
 					});
 			}
 		);

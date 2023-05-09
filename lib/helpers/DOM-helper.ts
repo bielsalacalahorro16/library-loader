@@ -8,7 +8,7 @@ export default class DOMHelper {
 		return document.querySelectorAll(selector).length >= 1;
 	}
 
-	public static loadScript(
+	public static mapScript(
 		url: string,
 		scriptLoaderType: ScriptLoaderType
 	): Promise<void> {
@@ -23,7 +23,7 @@ export default class DOMHelper {
 		});
 	}
 
-	public static loadInlineStyle(styleText: string): Promise<void> {
+	public static mapInlineStyle(styleText: string): Promise<void> {
 		const style: HTMLStyleElement = document.createElement('style');
 		document.head.append(style);
 		style.textContent = styleText;
@@ -33,7 +33,7 @@ export default class DOMHelper {
 		});
 	}
 
-	public static loadHeaderStyle(url: string): Promise<void> {
+	public static mapHeaderStyle(url: string): Promise<void> {
 		const head: HTMLHeadElement = document.head;
 		const link: HTMLLinkElement = document.createElement('link');
 		head.appendChild(link);
